@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pg-mysql
+  namespace: wordpress
+  labels:
+    app: mysql
+    env: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      name: pg-pod-mysql
+      labels:
+        app: mysql
+    spec:
+      volumes:
+        - name: data-mysql
+          persistentVolumeClaim:
+            claimName: data-mysql-pvc
+      containers:
+        - name: mysql
+          image: mysql
+          ports:    
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: postgres
+            - name: MYSQL_DATABASE
+              value: eazytraining
+            - name: MYSQL_USER
+              value: pg
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                    name: mysecret
+                    key: WORDPRESS_DB_USER
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: data-mysql

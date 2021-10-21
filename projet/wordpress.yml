@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pg-wordpress
+  namespace: wordpress
+  labels:
+    app: wordpress
+    env: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      name: pg-pod-wordpress
+      labels:
+        app: wordpress
+    spec:
+      volumes:
+        - name: data-wordpress
+          persistentVolumeClaim:
+            claimName: data-wordpress-pvc
+      containers:
+        - name: wordpress
+          image: wordpress
+          ports:    
+            - containerPort: 80
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mysql-svc
+            - name: WORDPRESS_DB_USER
+              value: pg
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                    name: mysecret
+                    key: WORDPRESS_DB_USER
+            - name: WORDPRESS_DB_NAME
+              value: eazytraining
+          volumeMounts:
+            - mountPath: /var/www/html
+              name: data-wordpress
